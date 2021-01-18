@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+        </title>
+        <link rel="stylesheet" type="text/css" href="carcassonne.css" />
+    </head>
+    <body>
+        <div id="board"></div>
+    </body>
+    <script src = "/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+      socket.on('hi', function(data) {
+        console.log(data);
+      });
+      let seed = ["C", "R", "F", "R"];
+      let board = [
+          [0, 0 ,0],
+          [0, seed, 0],
+          [0, 0 ,0]
+      ];
+      set();
+      function rotate(tile) {
+          tile.unshift(tile.pop());
+      }
+      function set() {
+        let play = document.getElementById('board');
+        play.innerHTML = '';
+        let tile;
+        for (const [y, row] of board.entries()) {
+          for (const [x, column] of row.entries()) {
+            tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.addEventListener('click', function() {
+                expand(y, x)
+            });
+            if (column == 0) {
+                tile.style.backgroundColor = 'grey';
+            } else {
+                tile.style.backgroundColor = 'black';
+            }
+            play.appendChild(tile);
+          }
+        }
+      }
+      function expand(y, x) {
+        board[y][x] = {};
+        if (y == 0) {
+          let row = [];
+          let base = board[0].length;
+          while (row.length != base) {
+              row.push(0);
+          }
+          board.unshift(row);
+        }
+        if (y == board.length - 1) {
+          let row = [];
+          let base = board[0].length;
+          while (row.length != base) {
+              row.push(0);
+          }
+          board.push(row);
+        }
+        if (x == 0) {
+          for (let row of board) {
+              row.unshift(0);
+          }
+          document.documentElement.style.setProperty("--cols", board[0].length);
+        }
+        if (x == board[0].length - 1) {
+          for (let row of board) {
+              row.push(0);
+          }
+          document.documentElement.style.setProperty("--cols", board[0].length);
+        }
+        set();
+      }
+    </script>
+</html>

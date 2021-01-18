@@ -1,0 +1,15 @@
+:root {
+    --cols: 3;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), auto);
+    width: 600px;
+}
+
+.tile {
+    width: 193px;
+    height: 193px;
+    margin: 3px;
+}
