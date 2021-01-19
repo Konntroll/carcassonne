@@ -1,24 +1,17 @@
-var express = require('express');
-var carcass = express();
-var http = require('http').Server(carcass);
-var io = require('socket.io')(http);
-var path = require('path');
+const express = require('express');
+const carcass = express();
+const http = require('http').Server(carcass);
+const io = require('socket.io')(http);
+const path = require('path');
 const fs = require('fs')
-var port = process.env.PORT || 80;
+const port = process.env.PORT || 80;
 
-let pool;
-try {
-  const data = fs.readFileSync('tiles.json', 'utf8');
-  pool = JSON.parse(data);
-} catch (err) {
-  console.error(err);
-}
-//console.log(typeof(pool));
 let tiles = new Map();
-for (const [tile, sides] of Object.entries(pool)) {
+const data = fs.readFileSync('tiles.json', 'utf8');
+for (const [tile, sides] of Object.entries(JSON.parse(data))) {
     tiles.set(parseInt(tile), sides);
 }
-console.log(tiles);
+
 let keys = mix();
 
 function mix() {
@@ -38,7 +31,7 @@ carcass.get('/', function(req, res) {
 }).use(express.static(path.join(__dirname, '/public')));
 
 io.on('connection', function(socket) {
-  socket.emit('hi', 'test');
+  socket.emit('tile', {sides: tiles.get(keys[0]), key: keys[0], rot: 0});
 });
 
 http.listen(port, function() {

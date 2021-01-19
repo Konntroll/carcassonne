@@ -6,23 +6,35 @@
         <link rel="stylesheet" type="text/css" href="carcassonne.css" />
     </head>
     <body>
+        <div id="display"></div>
         <div id="board"></div>
     </body>
     <script src = "/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
-      socket.on('hi', function(data) {
-        console.log(data);
+      let inHand = {sides: [], key: 0, rot: 0};
+      socket.on('tile', function(data) {
+        inHand.key = data.key;
+        inHand.sides = data.sides;
+        let tile = document.createElement('img');
+        tile.src = 'tiles/' + data.key + '.jpg';
+        tile.id = inHand.key;
+        tile.addEventListener('click', function() {
+          rotate(inHand);
+        });
+        document.getElementById('display').appendChild(tile);
       });
-      let seed = ["C", "R", "F", "R"];
+      let seed = {sides: ["C", "R", "F", "R"], key: 'seed', rot: 0};
       let board = [
-          [0, 0 ,0],
-          [0, seed, 0],
-          [0, 0 ,0]
+        [0, 0 ,0],
+        [0, seed, 0],
+        [0, 0 ,0]
       ];
       set();
       function rotate(tile) {
-          tile.unshift(tile.pop());
+        tile.sides.unshift(tile.sides.pop());
+        tile.rot == 3 ? tile.rot = 0 : tile.rot++;
+        document.getElementById(tile.key).style.transform = 'rotate(' + 90 * tile.rot + 'deg)';
       }
       function set() {
         let play = document.getElementById('board');
@@ -30,22 +42,41 @@
         let tile;
         for (const [y, row] of board.entries()) {
           for (const [x, column] of row.entries()) {
-            tile = document.createElement('div');
-            tile.className = 'tile';
-            tile.addEventListener('click', function() {
-                expand(y, x)
-            });
             if (column == 0) {
-                tile.style.backgroundColor = 'grey';
+              tile = document.createElement('div');
+              tile.className = 'tile';
+              tile.id = y + '.' + x;
+              tile.addEventListener('click', function() {
+                  validate(y, x);
+              });
             } else {
-                tile.style.backgroundColor = 'black';
+              tile = document.createElement('img');
+              tile.src = 'tiles/' + board[y][x].key + '.jpg';
+              tile.className = 'tile';
+              tile.id = board[y][x].key;
+              tile.style.transform = 'rotate(' + 90 * board[y][x].rot + 'deg)';
             }
             play.appendChild(tile);
           }
         }
       }
+      function claim() {};
+      function validate(y, x) {
+
+        place(y, x);
+      }
+      function place(y, x) {
+        board[y][x] = {sides: inHand.sides, key: inHand.key, rot: inHand.rot};
+        let tile = document.createElement('img');
+        tile.src = 'tiles/' + board[y][x].key + '.jpg';
+        tile.id = board[y][x].key;
+        tile.addEventListener('click', function() {
+            claim();
+        });
+        document.getElementById(y + '.' + x).appendChild(tile);
+        expand(y, x);
+      }
       function expand(y, x) {
-        board[y][x] = {};
         if (y == 0) {
           let row = [];
           let base = board[0].length;
