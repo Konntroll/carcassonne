@@ -31,11 +31,20 @@ carcass.get('/', function(req, res) {
 }).use(express.static(path.join(__dirname, '/public')));
 
 io.on('connection', function(socket) {
-  socket.emit('tile', {sides: tiles.get(shift(keys[0])),
-                       key: keys[0],
+  let key = keys.shift();
+  socket.emit('tile', {sides: tiles.get(key),
+                       key: key,
                        rot: 0,
                        meeple: {}
                       });
+  socket.on('placed', function() {
+    let key = keys.shift();
+    socket.emit('tile', {sides: tiles.get(key),
+                         key: key,
+                         rot: 0,
+                         meeple: {}
+                        });
+  });
 });
 
 http.listen(port, function() {
