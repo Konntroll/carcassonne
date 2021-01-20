@@ -25,6 +25,11 @@
         document.getElementById('display').appendChild(tile);
       });
       let seed = {sides: ["C", "R", "F", "R"], key: 'seed', rot: 0};
+      /*let seed = {sides: ["C", "R", "F", "R"],
+                    key: 'seed',
+                    rot: 0,
+                    meeple: {player: color, x: 0, y: 0}
+                   };*/
       let board = [
         [0, 0 ,0],
         [0, seed, 0],
@@ -60,9 +65,42 @@
           }
         }
       }
-      function claim() {};
-      function validate(y, x) {
+      function pass() {
+        socket.emit('pass', board)
+      }
+      function claim(event) {
+        console.log(event.clientX, event.clientY);
+      };
+      /*
+      function printMousePos(event) {
+        document.body.textContent =
+          "clientX: " + event.clientX +
+          " - clientY: " + event.clientY;
+      }
 
+      document.addEventListener("click", printMousePos);
+      */
+      function validate(y, x) {
+        if (board[y-1][x]) {
+          if (board[y-1][x].sides[2] != inHand.sides[0]) {
+            return;
+          }
+        }
+        if (board[y+1][x]) {
+          if (board[y+1][x].sides[0] != inHand.sides[2]) {
+            return;
+          }
+        }
+        if (board[y][x-1]) {
+          if (board[y][x-1].sides[1] != inHand.sides[3]) {
+            return;
+          }
+        }
+        if (board[y][x+1]) {
+          if (board[y][x+1].sides[3] != inHand.sides[1]) {
+            return;
+          }
+        }
         place(y, x);
       }
       function place(y, x) {
