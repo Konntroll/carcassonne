@@ -4,7 +4,7 @@ const http = require('http').Server(carcass);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3000;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
@@ -35,14 +35,16 @@ io.on('connection', function(socket) {
   socket.emit('tile', {sides: tiles.get(key),
                        key: key,
                        rot: 0,
-                       meeple: {}
+                       claim: {},
+                       new: false
                       });
   socket.on('placed', function() {
     let key = keys.shift();
     socket.emit('tile', {sides: tiles.get(key),
                          key: key,
                          rot: 0,
-                         meeple: {}
+                         claim: {},
+                         new: false
                         });
   });
 });
