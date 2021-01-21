@@ -46,27 +46,30 @@
         let play = document.getElementById('board');
         play.innerHTML = '';
         let tile;
+        let pic;
         for (const [y, row] of board.entries()) {
           for (const [x, column] of row.entries()) {
+            tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.id = y + '.' + x;
             if (column == 0) {
-              tile = document.createElement('div');
-              tile.className = 'tile';
-              tile.id = y + '.' + x;
               tile.addEventListener('click', function() {
                   validate(y, x);
               });
             } else {
-              tile = document.createElement('img');
-              tile.src = 'tiles/' + board[y][x].key + '.jpg';
-              tile.className = 'tile';
-              tile.id = board[y][x].key;
-              tile.style.transform = 'rotate(' + 90 * board[y][x].rot + 'deg)';
+              pic = document.createElement('img');
+              pic.src = 'tiles/' + board[y][x].key + '.jpg';
+              pic.className = 'pic';
+              pic.id = board[y][x].key;
+              pic.style.transform = 'rotate(' + 90 * board[y][x].rot + 'deg)';
+              let id = tile.id;
               if (board[y][x].new) {
-                tile.addEventListener('click', function() {
-                    claim(event);
+                pic.addEventListener('click', function() {
+                    claim(event, id);
                 });
                 board[y][x].new = false;
               }
+              tile.appendChild(pic);
             }
             play.appendChild(tile);
           }
@@ -75,18 +78,14 @@
       function pass() {
         socket.emit('pass', board)
       }
-      function claim(event) {
-        console.log(event.clientX, event.clientY);
+      function claim(event, id) {
+        let meeple = document.createElement('img');
+        meeple.src = "meeple.png";
+        meeple.id = 'meeple';
+        meeple.style.top = event.clientY % 193 - 24 + 'px';
+        meeple.style.left = event.clientX % 193 - 24 + 'px';
+        document.getElementById(id).appendChild(meeple);
       };
-      /*
-      function printMousePos(event) {
-        document.body.textContent =
-          "clientX: " + event.clientX +
-          " - clientY: " + event.clientY;
-      }
-
-      document.addEventListener("click", printMousePos);
-      */
       function validate(y, x) {
         let touching = 0;
         if (y - 1 >= 0) {
@@ -127,7 +126,6 @@
         }
         if (touching > 0) {
           inHand.new = true;
-          console.log(board);
           place(y, x);
         } else {
           return;
@@ -140,7 +138,6 @@
         tile.id = board[y][x].key;
         document.getElementById(y + '.' + x).appendChild(tile);
         expand(y, x);
-        console.log(board);
         socket.emit('placed');
       }
       function expand(y, x) {

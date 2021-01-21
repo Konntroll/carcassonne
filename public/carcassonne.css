@@ -3,16 +3,31 @@
 }
 
 #board {
-    display: grid;
-    grid-template-columns: repeat(var(--cols), auto);
-    width: 0px;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), auto);
+  width: 0px;
 }
 
 .tile {
-    width: 193px;
-    height: 193px;
-    border-radius: 0.3em;
-    border-width: 5px;
-    border-color: black;
-    background-color: grey;
+  position: relative;
+  width: 193px;
+  height: 193px;
+  border-radius: 0.3em;
+  border-width: 5px;
+  border-color: red;
+  background-color: grey;
+  z-index: 0;
+}
+
+.pic {
+  position: relative;
+  z-index: 1;
+}
+
+#meeple {
+  position: absolute;
+  display: block;
+  height: 32px;
+  width: 32px;
+  z-index: 2;
 }
