@@ -24,10 +24,10 @@
   z-index: 1;
 }
 
-#meeple {
+.meeple {
   position: absolute;
   display: block;
-  height: 32px;
-  width: 32px;
+  height: 48px;
+  width: 48px;
   z-index: 2;
 }

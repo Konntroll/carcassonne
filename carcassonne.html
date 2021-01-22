@@ -80,11 +80,17 @@
       }
       function claim(event, id) {
         let meeple = document.createElement('img');
-        meeple.src = "meeple.png";
-        meeple.id = 'meeple';
-        meeple.style.top = event.clientY % 193 - 24 + 'px';
-        meeple.style.left = event.clientX % 193 - 24 + 'px';
+        meeple.src = "white.svg";
+        meeple.className = 'meeple';
+        meeple.addEventListener('click', function {
+          reclaim();
+        });
+        meeple.style.top = event.clientY % 193 - 32 + 'px';
+        meeple.style.left = event.clientX % 193 - 32 + 'px';
         document.getElementById(id).appendChild(meeple);
+      };
+      function reclaim() {
+        return;
       };
       function validate(y, x) {
         let touching = 0;

@@ -4,7 +4,7 @@ const http = require('http').Server(carcass);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3000;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
