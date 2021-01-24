@@ -2,18 +2,34 @@
 <html>
     <head>
         <title>
+          Carcassonne
         </title>
         <link rel="stylesheet" type="text/css" href="carcassonne.css" />
     </head>
     <body>
-        <div id="display"></div>
+        <div id="create">
+          <h1>Start a game.</h1>
+          <input id="startGame" type="text" placeholder="Choose a name." onkeyup="createGame()">
+          <button id="gamebtn" type="button" onclick="createGame()">Create!</button>
+          <div id="games">
+            <h1>Or join one of these:</h1>
+          </div>
+        </div>
+        <div id="infoAndControls">
+          <div class='btn' onclick="ready()">Start</div>
+          <div class='btn start confirm' onclick="ready()">Confirm</div>
+          <div class='btn' onclick="leave()">Leave</div>
+        </div>
+        <div id="display">
+          <img src="tiles/back.jpg" id="hand" onclick="rotate()">
+        </div>
         <div id="board"></div>
     </body>
     <script src = "/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
       let hand = null;
-      let color = 'white';
+      let color = '';
       let meeples = 7;
       let seed = {sides: ["C", "R", "F", "R"],
                   key: 'seed',
@@ -24,22 +40,83 @@
         [0, seed, 0],
         [0, 0 ,0]
       ];
+      socket.on('newPlayer', function(data) {
+        color = data;
+        infoAndControls();
+      });
       socket.on('tile', function(data) {
         hand = data;
-        let tile = document.createElement('img');
-        tile.src = 'tiles/' + hand.key + '.jpg';
-        tile.id = hand.key;
-        tile.addEventListener('click', function() {
-          rotate(hand);
-        });
-        document.getElementById('display').appendChild(tile);
+        let display = document.getElementById('hand');
+        display.src = 'tiles/' + hand.key + '.jpg';
       });
-      set();
-      function rotate(tile) {
-        tile.sides.unshift(tile.sides.pop());
-        tile.rot == 3 ? tile.rot = 0 : tile.rot++;
-        let trg = document.getElementById(tile.key);
-        trg.style.transform = 'rotate(' + 90 * tile.rot + 'deg)';
+      socket.on('update', function(update) {
+        board = update;
+        document.documentElement.style.setProperty("--cols", board[0].length);
+        set();
+      });
+      socket.on('updateGamesAvailable', function(game) {
+        if (color == '') {
+          document.getElementById('games').style.display = "block";
+        }
+        if (document.getElementById(game)) {
+          document.getElementById(game).remove();
+        } else {
+          makeGameEntry(game);
+        }
+      })
+      socket.on('welcome', function(games) {
+        if (games.length > 0) {
+          document.getElementById('games').style.display = "block";
+        } else {
+          document.getElementById('games').style.display = "none";
+          return;
+        }
+        for (let game of games) {
+          if (document.getElementById(game)) continue;
+          makeGameEntry(game);
+        }
+      });
+      function makeGameEntry(name) {
+        let entry = document.createElement("div");
+        entry.id = name;
+        entry.className = 'gamesAvailable';
+        let title = document.createTextNode(name);
+        entry.onclick = function() {
+          socket.emit('join', name);
+          document.getElementById('create').style.display = "none";
+          document.getElementById('display').style.display = 'block';
+          document.getElementById('infoAndControls').style.display = 'flex';
+        }
+        entry.appendChild(title);
+        document.getElementById('games').appendChild(entry);
+      }
+      function infoAndControls() {
+        let info = document.getElementById('infoAndControls');
+        let token = document.createElement('img');
+        token.src = color + '.svg';
+        token.id = 'token';
+        info.prepend(token);
+      }
+      function createGame() {
+        if (event.keyCode === 13 || event.button === 0) {
+          socket.emit('create', document.getElementById('startGame').value);
+          document.getElementById('startGame').value = '';
+          document.getElementById('create').style.display = "none";
+          document.getElementById('display').style.display = 'block';
+          document.getElementById('infoAndControls').style.display = 'flex';
+        }
+      }
+      function leave() {
+        socket.emit('leave');
+        document.getElementById('create').style.display = "block";
+        document.getElementById('display').style.display = 'none';
+        document.getElementById('infoAndControls').style.display = 'none';
+      }
+      function rotate() {
+        hand.sides.unshift(hand.sides.pop());
+        hand.rot == 3 ? hand.rot = 0 : hand.rot++;
+        let trg = document.getElementById('hand');
+        trg.style.transform = 'rotate(' + 90 * hand.rot + 'deg)';
       }
       function set() {
         let play = document.getElementById('board');
@@ -63,11 +140,13 @@
               pic.style.transform = 'rotate(' + 90 * board[y][x].rot + 'deg)';
               pic.addEventListener('click', function() {
                 if (board[y][x].claim.by || meeples == 0) return;
-                  board[y][x].claim.by = color;
-                  board[y][x].claim.top = event.clientY % 193 - 32 + 'px';
-                  board[y][x].claim.left = event.clientX % 193 - 32 + 'px';
-                  meeples--;
-                  claim(y, x);
+                board[y][x].claim.by = color;
+                let offsetTop = document.documentElement.scrollTop - 75 - (y * 4);
+                let offsetLeft = document.documentElement.scrollLeft - 15 - (x * 4);
+                board[y][x].claim.top = (event.clientY + offsetTop) % 193 - 24 + 'px';
+                board[y][x].claim.left = (event.clientX + offsetLeft) % 193 - 24 + 'px';
+                meeples--;
+                claim(y, x);
               });
               tile.appendChild(pic);
             }
@@ -105,6 +184,7 @@
         document.getElementById(y + '.' + x).appendChild(meeple);
       };
       function reclaim(y, x) {
+        if (board[y][x].claim.by != color) return;
         document.getElementById(x + 'meeple' + y).remove();
         meeples++;
         board[y][x].claim.by = null;
@@ -154,13 +234,17 @@
         }
       }
       function place(y, x) {
+        if (!hand) return;
         board[y][x] = hand;
         let tile = document.createElement('img');
         tile.src = 'tiles/' + board[y][x].key + '.jpg';
         tile.id = board[y][x].key;
         document.getElementById(y + '.' + x).appendChild(tile);
         expand(y, x);
-        socket.emit('placed');
+        hand = null;
+        let display = document.getElementById('hand');
+        display.src = 'tiles/back.jpg';
+        display.style.transform = 'rotate(0deg)';
       }
       function expand(y, x) {
         if (y == 0) {
@@ -192,6 +276,11 @@
           document.documentElement.style.setProperty("--cols", board[0].length);
         }
         set();
+      }
+      function ready() {
+        if (!hand) {
+          socket.emit('ready', board);
+        }
       }
     </script>
 </html>
