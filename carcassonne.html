@@ -16,9 +16,10 @@
           </div>
         </div>
         <div id="infoAndControls">
-          <div class='btn' onclick="ready()">Start</div>
-          <div class='btn start confirm' onclick="ready()">Confirm</div>
-          <div class='btn' onclick="leave()">Leave</div>
+          <div class='btn' id="start" onclick="start()">Start</div>
+          <div class='btn' id="done" onclick="done()">Done</div>
+          <div class='btn' id="discard" onclick="discard()">Discard</div>
+          <div class='btn' id="leave" onclick="leave()">Leave</div>
         </div>
         <div id="display">
           <img src="tiles/back.jpg" id="hand" onclick="rotate()">
@@ -28,6 +29,7 @@
     <script src = "/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
+
       let hand = null;
       let color = '';
       let meeples = 7;
@@ -40,6 +42,7 @@
         [0, seed, 0],
         [0, 0 ,0]
       ];
+
       socket.on('newPlayer', function(data) {
         color = data;
         infoAndControls();
@@ -54,49 +57,49 @@
         document.documentElement.style.setProperty("--cols", board[0].length);
         set();
       });
-      socket.on('updateGamesAvailable', function(game) {
-        let strike = document.getElementById(game);
-        console.log(game);
-        console.log(strike);
-        if (strike) {
-          strike.parentNode.removeChild(strike);
-          console.log('deleted');
-        } else {
-          makeGameEntry(game);
-          console.log('created');
-        }
-        let games = document.getElementById('games');
-        if (color == '' && games.children.length > 1) {
-          games.style.display = "block";
-        }
-      })
+      socket.on('listGame', function(game) {
+        makeGameEntry(game);
+        toggleGameList();
+      });
+      socket.on('unlistGame', function (game) {
+        let entry = document.getElementById(game);
+        entry.parentNode.removeChild(entry);
+        toggleGameList();
+      });
       socket.on('welcome', function(games) {
-        if (games.length > 0) {
-          document.getElementById('games').style.display = "block";
-        } else {
-          document.getElementById('games').style.display = "none";
-          return;
-        }
         for (let game of games) {
           if (document.getElementById(game)) continue;
           makeGameEntry(game);
         }
+        toggleGameList();
       });
-      socket.on('left', function() {
-        color = '';
-        document.getElementById('board').innerHTML = '';
-        document.getElementById('create').style.display = "block";
-        document.getElementById('display').style.display = 'none';
-        document.getElementById('infoAndControls').style.display = 'none';
-        //the following could be handled in infoAndControls?
-        let token = document.getElementById('token');
-        token.parentNode.removeChild(token);
-        board = [
-          [0, 0 ,0],
-          [0, seed, 0],
-          [0, 0 ,0]
-        ];
+      socket.on('depopulate', function(color) {
+        //this removes all the meeples placed by a player who
+        //has just left the game with next update of the board
+        for (const [y, row] of board.entries()) {
+          for (const [x, column] of row.entries()) {
+            if (column == 0 || column.claim.by == 'seed') {
+              continue;
+            } else {
+              if (column.claim.by == color) {
+                column.claim.by == null;
+              }
+            }
+          }
+        }
       });
+      socket.on('gameStarted', function() {
+        document.getElementById('start').style.display = 'none';
+        document.getElementById('done').style.display = 'block';
+      })
+      function toggleGameList() {
+        let games = document.getElementById('games');
+        if (games.children.length > 1) {
+          document.getElementById('games').style.display = "block";
+        } else {
+          document.getElementById('games').style.display = "none";
+        }
+      }
       function makeGameEntry(name) {
         let entry = document.createElement("div");
         entry.id = name;
@@ -129,15 +132,32 @@
       }
       function leave() {
         socket.emit('leave');
+        hand = null;
+        let display = document.getElementById('hand');
+        display.src = 'tiles/back.jpg';
+        display.style.transform = 'rotate(0deg)';
+        color = '';
+        meeples = 7;
+        document.getElementById('board').innerHTML = '';
+        board = [
+          [0, 0 ,0],
+          [0, seed, 0],
+          [0, 0 ,0]
+        ];
         document.getElementById('create').style.display = "block";
         document.getElementById('display').style.display = 'none';
         document.getElementById('infoAndControls').style.display = 'none';
+        document.getElementById('start').style.display = 'block';
+        document.getElementById('done').style.display = 'none';
+        let token = document.getElementById('token');
+        token.parentNode.removeChild(token);
       }
       function rotate() {
+        let hand = document.getElementById('hand');
+        if (hand.src.charAt(hand.src.length - 5) == 'k') return;
         hand.sides.unshift(hand.sides.pop());
         hand.rot == 3 ? hand.rot = 0 : hand.rot++;
-        let trg = document.getElementById('hand');
-        trg.style.transform = 'rotate(' + 90 * hand.rot + 'deg)';
+        hand.style.transform = 'rotate(' + 90 * hand.rot + 'deg)';
       }
       function set() {
         let play = document.getElementById('board');
@@ -175,9 +195,6 @@
           }
         }
         populate();
-      }
-      function pass() {
-        socket.emit('pass', board)
       }
       function populate() {
         for (const [y, row] of board.entries()) {
@@ -298,9 +315,14 @@
         }
         set();
       }
-      function ready() {
+      function start() {
+        socket.emit('start', board);
+        document.getElementById('start').style.display = 'none';
+        document.getElementById('done').style.display = 'block';
+      }
+      function done() {
         if (!hand) {
-          socket.emit('ready', board);
+          socket.emit('done', board);
         }
       }
     </script>

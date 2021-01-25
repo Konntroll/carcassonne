@@ -76,6 +76,6 @@ body {
   z-index: 3;
 }
 
-#games {
+#games, #done {
   display: none;
 }
