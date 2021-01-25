@@ -55,13 +55,19 @@
         set();
       });
       socket.on('updateGamesAvailable', function(game) {
-        if (color == '') {
-          document.getElementById('games').style.display = "block";
-        }
-        if (document.getElementById(game)) {
-          document.getElementById(game).remove();
+        let strike = document.getElementById(game);
+        console.log(game);
+        console.log(strike);
+        if (strike) {
+          strike.parentNode.removeChild(strike);
+          console.log('deleted');
         } else {
           makeGameEntry(game);
+          console.log('created');
+        }
+        let games = document.getElementById('games');
+        if (color == '' && games.children.length > 1) {
+          games.style.display = "block";
         }
       })
       socket.on('welcome', function(games) {
@@ -75,6 +81,21 @@
           if (document.getElementById(game)) continue;
           makeGameEntry(game);
         }
+      });
+      socket.on('left', function() {
+        color = '';
+        document.getElementById('board').innerHTML = '';
+        document.getElementById('create').style.display = "block";
+        document.getElementById('display').style.display = 'none';
+        document.getElementById('infoAndControls').style.display = 'none';
+        //the following could be handled in infoAndControls?
+        let token = document.getElementById('token');
+        token.parentNode.removeChild(token);
+        board = [
+          [0, 0 ,0],
+          [0, seed, 0],
+          [0, 0 ,0]
+        ];
       });
       function makeGameEntry(name) {
         let entry = document.createElement("div");

@@ -4,7 +4,7 @@ const http = require('http').Server(carcassonne);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3000;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
@@ -64,13 +64,16 @@ io.on('connection', function(socket) {
     socket.leave(socket.game.name);
     let dropout = socket.game.players.indexOf(socket.id);
     socket.game.players.splice(dropout, 1);
-    socket.color = '';
     socket.emit('left');
-    if (socket.game.players.length <= 1) {
-      closeGame();
+    if (socket.game.players.length == 1) {
+      io.to(socket.game.players[0].id).emit('left');
+      socket.game.players[0].color = '';
+      io.emit('updateGamesAvailable', socket.game.name);
+      games.delete(socket.game.name);
+      socket.game.players[0].game = null;
     }
+    socket.color = '';
     socket.game = null;
-    console.log(socket);
   });
 
   socket.on('ready', function(board) {
@@ -98,9 +101,6 @@ function listGames() {
     }
   }
   return gamesAvailable;
-};
-function closeGame() {
-  return;
 };
 
 http.listen(port, function() {
