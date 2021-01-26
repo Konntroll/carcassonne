@@ -73,21 +73,6 @@
         }
         toggleGameList();
       });
-      socket.on('depopulate', function(color) {
-        //this removes all the meeples placed by a player who
-        //has just left the game with next update of the board
-        for (const [y, row] of board.entries()) {
-          for (const [x, column] of row.entries()) {
-            if (column == 0 || column.claim.by == 'seed') {
-              continue;
-            } else {
-              if (column.claim.by == color) {
-                column.claim.by == null;
-              }
-            }
-          }
-        }
-      });
       socket.on('gameStarted', function() {
         document.getElementById('start').style.display = 'none';
         document.getElementById('done').style.display = 'block';
@@ -131,7 +116,7 @@
         }
       }
       function leave() {
-        socket.emit('leave');
+        depopulate();
         hand = null;
         let display = document.getElementById('hand');
         display.src = 'tiles/back.jpg';
@@ -151,13 +136,14 @@
         document.getElementById('done').style.display = 'none';
         let token = document.getElementById('token');
         token.parentNode.removeChild(token);
+        socket.emit('leave');
       }
       function rotate() {
-        let hand = document.getElementById('hand');
-        if (hand.src.charAt(hand.src.length - 5) == 'k') return;
+        let tile = document.getElementById('hand');
+        if (tile.src.charAt(tile.src.length - 5) == 'k') return;
         hand.sides.unshift(hand.sides.pop());
         hand.rot == 3 ? hand.rot = 0 : hand.rot++;
-        hand.style.transform = 'rotate(' + 90 * hand.rot + 'deg)';
+        tile.style.transform = 'rotate(' + 90 * hand.rot + 'deg)';
       }
       function set() {
         let play = document.getElementById('board');
@@ -208,6 +194,22 @@
             }
           }
         }
+      }
+      function depopulate() {
+        //this removes all the meeples placed by a player who
+        //has just left the game with next update of the board
+        for (const [y, row] of board.entries()) {
+          for (const [x, column] of row.entries()) {
+            if (column == 0 || column.claim.by == 'seed') {
+              continue;
+            } else {
+              if (column.claim.by == color) {
+                column.claim.by = null;
+              }
+            }
+          }
+        }
+        socket.emit('depopulated', board);
       }
       function claim(y, x) {
         let meeple = document.createElement('img');

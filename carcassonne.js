@@ -4,7 +4,7 @@ const http = require('http').Server(carcassonne);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3000;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
@@ -59,9 +59,15 @@ io.on('connection', function(socket) {
   });
   socket.on('leave', function() {
     socket.leave(socket.game.name);
+    for (let player of socket.game.players) {
+      console.log(player.id);
+    }
     let dropout = socket.game.players.indexOf(socket.id);
     socket.game.players.splice(dropout, 1);
-    io.to(socket.game.name).emit('depopulate', socket.color);
+    console.log('after splice')
+    for (let player of socket.game.players) {
+      console.log(player.id);
+    }
     socket.color = '';
     if (socket.game.players.length <= 0) {
       if (!socket.game.started) {
@@ -71,32 +77,19 @@ io.on('connection', function(socket) {
     }
     socket.game = null;
   });
+  socket.on('depopulated', function(board) {
+    socket.in(socket.game.name).emit('update', board);
+  });
   socket.on('start', function(board) {
     socket.game.started = true;
     io.emit('unlistGame', socket.game.name);
     socket.to(socket.game.name).emit('gameStarted');
-    let tile = socket.game.bag.shift();
     io.in(socket.game.name).emit('update', board);
-    io.to(socket.game.players[0].id).emit('tile',
-                        {sides: tiles.get(tile),
-                         key: tile,
-                         rot: 0,
-                         claim: {by: null}
-                        }
-    );
-    socket.game.players.push(socket.game.players.shift());
+    issueTile(socket);
   });
   socket.on('done', function(board) {
-    let tile = socket.game.bag.shift();
     io.in(socket.game.name).emit('update', board);
-    io.to(socket.game.players[0].id).emit('tile',
-                        {sides: tiles.get(tile),
-                         key: tile,
-                         rot: 0,
-                         claim: {by: null}
-                        }
-    );
-    socket.game.players.push(socket.game.players.shift());
+    issueTile(socket);
   });
 });
 
@@ -110,6 +103,19 @@ function listGames() {
   }
   return gamesAvailable;
 };
+
+function issueTile(player) {
+  let tile = player.game.bag.shift();
+  console.log(player.game.bag);
+  io.to(player.game.players[0].id).emit('tile',
+                      {sides: tiles.get(tile),
+                       key: tile,
+                       rot: 0,
+                       claim: {by: null}
+                      }
+  );
+  player.game.players.push(player.game.players.shift());
+}
 
 http.listen(port, function() {
    console.log('Listening on port ' + port);
