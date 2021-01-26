@@ -4,7 +4,7 @@ const http = require('http').Server(carcassonne);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
@@ -57,16 +57,13 @@ io.on('connection', function(socket) {
     socket.join(game);
     socket.emit('newPlayer', socket.color);
   });
-  socket.on('leave', function() {
+  socket.on('leave', function(board) {
+    socket.to(socket.game.name).emit('update', board);
     socket.leave(socket.game.name);
-    for (let player of socket.game.players) {
-      console.log(player.id);
-    }
     let dropout = socket.game.players.indexOf(socket.id);
     socket.game.players.splice(dropout, 1);
-    console.log('after splice')
-    for (let player of socket.game.players) {
-      console.log(player.id);
+    if (socket.game.players.length > 0) {
+      issueTile(socket.game.players[0]);
     }
     socket.color = '';
     if (socket.game.players.length <= 0) {
@@ -103,10 +100,8 @@ function listGames() {
   }
   return gamesAvailable;
 };
-
 function issueTile(player) {
   let tile = player.game.bag.shift();
-  console.log(player.game.bag);
   io.to(player.game.players[0].id).emit('tile',
                       {sides: tiles.get(tile),
                        key: tile,
@@ -114,6 +109,7 @@ function issueTile(player) {
                        claim: {by: null}
                       }
   );
+  io.in(player.game.name).emit('currentPlayer', player.game.players[0].color);
   player.game.players.push(player.game.players.shift());
 }
 

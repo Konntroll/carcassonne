@@ -32,6 +32,7 @@
 
       let hand = null;
       let color = '';
+      let currentPlayer = '';
       let meeples = 7;
       let seed = {sides: ["C", "R", "F", "R"],
                   key: 'seed',
@@ -43,9 +44,12 @@
         [0, 0 ,0]
       ];
 
-      socket.on('newPlayer', function(data) {
-        color = data;
+      socket.on('newPlayer', function(newColor) {
+        color = newColor;
         infoAndControls();
+      });
+      socket.on('currentPlayer', function(currentColor) {
+        currentPlayer = currentColor;
       });
       socket.on('tile', function(data) {
         hand = data;
@@ -123,6 +127,7 @@
         display.style.transform = 'rotate(0deg)';
         color = '';
         meeples = 7;
+        socket.emit('leave', board);
         document.getElementById('board').innerHTML = '';
         board = [
           [0, 0 ,0],
@@ -136,7 +141,6 @@
         document.getElementById('done').style.display = 'none';
         let token = document.getElementById('token');
         token.parentNode.removeChild(token);
-        socket.emit('leave');
       }
       function rotate() {
         let tile = document.getElementById('hand');
@@ -157,7 +161,7 @@
             tile.id = y + '.' + x;
             if (column == 0) {
               tile.addEventListener('click', function() {
-                  validate(y, x);
+                  if(validate(y, x)) place(y, x);
               });
             } else {
               pic = document.createElement('img');
@@ -234,7 +238,7 @@
         if (y - 1 >= 0) {
           if (board[y-1][x]) {
             if (board[y-1][x].sides[2] != hand.sides[0]) {
-              return;
+              return false;
             } else {
               touching++;
             }
@@ -243,7 +247,7 @@
         if (y + 1 <= board.length - 1) {
           if (board[y+1][x]) {
             if (board[y+1][x].sides[0] != hand.sides[2]) {
-              return;
+              return false;
             } else {
               touching++;
             }
@@ -252,7 +256,7 @@
         if (x - 1 >= 0) {
           if (board[y][x-1]) {
             if (board[y][x-1].sides[1] != hand.sides[3]) {
-              return;
+              return false;
             } else {
               touching++;
             }
@@ -261,16 +265,16 @@
         if (x + 1 <= board[0].length - 1) {
           if (board[y][x+1]) {
             if (board[y][x+1].sides[3] != hand.sides[1]) {
-              return;
+              return false;
             } else {
               touching++;
             }
           }
         }
         if (touching > 0) {
-          place(y, x);
+          return true;
         } else {
-          return;
+          return false;
         }
       }
       function place(y, x) {
@@ -323,7 +327,7 @@
         document.getElementById('done').style.display = 'block';
       }
       function done() {
-        if (!hand) {
+        if (!hand && currentPlayer == color) {
           socket.emit('done', board);
         }
       }
