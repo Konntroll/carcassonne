@@ -40,20 +40,41 @@ body {
   z-index: 2;
 }
 
-#token {
+#token, #tileMarker {
+  margin: 3px 0px;
   position: relative;
   display: block;
-  height: 48px;
-  width: 48px;
+  height: 44px;
+  width: 44px;
   z-index: 2;
 }
 
 .btn {
-  height: 32px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 44px;
+  margin: 3px;
+  align-content: center;
   justify-content: center;
+  border-radius: 4px;
   background-color: navy;
   color: white;
+  font-size: 20px;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+#meeplesLeft, #tilesLeft {
+  display: flex;
+  flex-direction: column;
+  height: 44px;
+  margin: 3px 3px 0px 3px;
+  align-content: center;
+  justify-content: center;
+  color: black;
+  font-size: 44px;
+  font-weight: bold;
+  padding-right: 10px;
 }
 
 #infoAndControls {
