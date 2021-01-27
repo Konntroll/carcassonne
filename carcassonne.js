@@ -4,7 +4,7 @@ const http = require('http').Server(carcassonne);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3000;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
@@ -109,7 +109,9 @@ function issueTile(player) {
                        claim: {by: null}
                       }
   );
-  io.in(player.game.name).emit('currentPlayer', player.game.players[0].color);
+  io.in(player.game.name).emit('stateUpdate',
+                               {color: player.game.players[0].color,
+                                tiles: player.game.bag.length});
   player.game.players.push(player.game.players.shift());
 }
 

@@ -20,6 +20,7 @@ body {
   height: 193px;
   border-radius: 0.3em;
   border: 2px solid black;
+  /*background-image: url("tiles/back.jpg");*/
   background-color: grey;
   z-index: 0;
   padding: 0;
@@ -52,6 +53,7 @@ body {
 .btn {
   display: flex;
   flex-direction: column;
+  position: relative;
   height: 44px;
   margin: 3px;
   align-content: center;
@@ -64,7 +66,24 @@ body {
   cursor: pointer;
 }
 
-#meeplesLeft, #tilesLeft {
+.tooltips {
+  visibility: hidden;
+  width: 150px;
+  background-color: black;
+  color: white;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 5;
+}
+
+.btn:hover > span,
+.stats:hover > span {
+  visibility: visible;
+}
+
+#meeplesLeft, #tilesLeft, #score {
   display: flex;
   flex-direction: column;
   height: 44px;
@@ -75,6 +94,12 @@ body {
   font-size: 44px;
   font-weight: bold;
   padding-right: 10px;
+  padding-left: 0px;
+}
+
+#score {
+  padding-right: 0px;
+  padding-left: 10px;
 }
 
 #infoAndControls {
@@ -88,6 +113,22 @@ body {
   left: 0px;
   z-index: 3;
 }
+
+#info, #controls {
+  display: flex;
+  flex-direction: row;
+  width: 50%;
+}
+
+#controls {
+  justify-content: flex-end;
+}
+
+#rest {
+  width: 200px;
+}
+
+
 
 #display {
   display: none;
