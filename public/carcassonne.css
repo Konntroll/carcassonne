@@ -93,6 +93,11 @@ body {
   left: 5px;
 }
 
+#test:hover > div {
+  visibility: visible;
+  left: 45px;
+}
+
 #meeplesLeft, #tilesLeft, #score {
   display: flex;
   flex-direction: column;
