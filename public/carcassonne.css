@@ -21,7 +21,7 @@ body {
   border-radius: 0.3em;
   border: 2px solid black;
   /*background-image: url("tiles/back.jpg");*/
-  background-color: grey;
+  background-color: rgb(213,213,213);
   z-index: 0;
   padding: 0;
 }
@@ -33,12 +33,16 @@ body {
   height: 193px;
 }
 
-.meeple {
+.meeple, .playerToken {
   position: absolute;
   display: block;
   height: 48px;
   width: 48px;
   z-index: 2;
+}
+
+.playerToken {
+  position: relative;
 }
 
 #token, #tileMarker {
@@ -78,9 +82,15 @@ body {
   z-index: 5;
 }
 
-.btn:hover > span,
-.stats:hover > span {
+.btn:hover > span {
   visibility: visible;
+  top: 50px;
+  left: -100%
+}
+
+.stats:hover > div {
+  visibility: visible;
+  left: 5px;
 }
 
 #meeplesLeft, #tilesLeft, #score {
@@ -100,6 +110,15 @@ body {
 #score {
   padding-right: 0px;
   padding-left: 10px;
+}
+
+.scores {
+  display: flex;
+  flex-direction: row;
+  color: white;
+  font-size: 44px;
+  font-weight: bold;
+  justify-content: center;
 }
 
 #infoAndControls {
@@ -127,8 +146,6 @@ body {
 #rest {
   width: 200px;
 }
-
-
 
 #display {
   display: none;

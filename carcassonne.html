@@ -18,8 +18,10 @@
         <div id="infoAndControls">
           <div id="info">
             <div class="stats">
-              <div id='score' onwheel="changeScore()">0</div>
-              <span class="tooltips">Scroll up or down to adjust your score.</span>
+              <div id="score" onwheel="changeScore()">0</div>
+              <div class="tooltips" id="scoreTrackers">Scroll up or down to adjust your score.
+                <div><hr>Player scores:</div>
+              </div>
             </div>
             <svg id="token" version="1.0" xmlns="http://www.w3.org/2000/svg"
              viewBox="0 0 512.000000 512.000000">
@@ -89,8 +91,7 @@
       });
       socket.on('stateUpdate', function(state) {
         currentPlayer = state.color;
-        tilesRemaining = state.tiles;
-        document.getElementById('tilesLeft').innerHTML = tilesRemaining;
+        document.getElementById('tilesLeft').innerHTML = state.tiles;
       });
       socket.on('tile', function(data) {
         hand = data;
@@ -122,10 +123,43 @@
         document.getElementById('start').style.display = 'none';
         document.getElementById('done').style.display = 'flex';
       })
+      socket.on('scoreUpdate', function(data) {
+        document.getElementById(data.color).innerHTML = data.score;
+      });
+      socket.on('createScoreTracker', function(color) {
+        createScoreTracker(color);
+      });
+      socket.on('fetchScoreTrackers', function(colors) {
+        for (let color of colors) {
+          createScoreTracker(color);
+        }
+      });
+      socket.on('removeScoreTracker', function(color) {
+        removeScoreTracker(color);
+      });
+      function createScoreTracker(color) {
+        let entry = document.createElement('div');
+        entry.className = 'scores';
+        entry.id = color + 'Player';
+        let token = document.createElement('img');
+        token.src = color + '.svg';
+        token.className = "playerToken";
+        let score = document.createElement('div');
+        score.id = color;
+        entry.appendChild(token);
+        entry.appendChild(score);
+        document.getElementById('scoreTrackers').appendChild(entry);
+        document.getElementById(color).innerHTML = 0;
+      }
+      function removeScoreTracker(color) {
+        let scoreTracker = document.getElementById(color + 'Player');
+        scoreTracker.parentNode.removeChild(scoreTracker);
+      }
       function changeScore() {
         score += event.deltaY * -0.01;
         if (score < 0) score = 0;
         document.getElementById('score').innerHTML = score;
+        socket.emit('scoreUpdate', score);
       }
       function toggleGameList() {
         let games = document.getElementById('games');
@@ -166,6 +200,8 @@
         display.style.transform = 'rotate(0deg)';
         meeples = 7;
         score = 0;
+        socket.emit('removeScoreTracker', color);
+        color = '';
         document.getElementById('score').innerHTML = score;
         document.getElementById('meeplesLeft').innerHTML = meeples;
         socket.emit('leave', board);

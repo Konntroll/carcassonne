@@ -4,7 +4,7 @@ const http = require('http').Server(carcassonne);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
@@ -49,6 +49,7 @@ io.on('connection', function(socket) {
     socket.join(game);
     socket.emit('newPlayer', socket.color);
     io.emit('listGame', game);
+    io.in(socket.game.name).emit('createScoreTracker', socket.color);
   });
   socket.on('join', function(game) {
     socket.game = games.get(game);
@@ -56,6 +57,12 @@ io.on('connection', function(socket) {
     socket.color = socket.game.colors.shift();
     socket.join(game);
     socket.emit('newPlayer', socket.color);
+    let colors = [];
+    for (let player of socket.game.players) {
+      colors.push(player.color);
+    }
+    socket.to(socket.game.name).emit('createScoreTracker', socket.color);
+    socket.emit('fetchScoreTrackers', colors);
   });
   socket.on('leave', function(board) {
     socket.to(socket.game.name).emit('update', board);
@@ -87,6 +94,13 @@ io.on('connection', function(socket) {
   socket.on('done', function(board) {
     io.in(socket.game.name).emit('update', board);
     issueTile(socket);
+  });
+  socket.on('scoreUpdate', function(score) {
+    io.in(socket.game.name).emit('scoreUpdate', {color: socket.color,
+                                                 score: score});
+  });
+  socket.on('removeScoreTracker', function(color) {
+    io.in(socket.game.name).emit('removeScoreTracker', color);
   });
 });
 
