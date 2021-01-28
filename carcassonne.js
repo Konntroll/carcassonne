@@ -4,7 +4,7 @@ const http = require('http').Server(carcassonne);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3000;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
@@ -83,6 +83,16 @@ io.on('connection', function(socket) {
   });
   socket.on('depopulated', function(board) {
     socket.in(socket.game.name).emit('update', board);
+  });
+  socket.on('replace', function(tile) {
+    let replacement = socket.game.bag.shift();
+    socket.game.bag.push(tile);
+    mix(socket.game.bag);
+    socket.emit('tile', {sides: tiles.get(replacement),
+                         key: replacement,
+                         rot: 0,
+                         claim: {by: null}
+                        });
   });
   socket.on('start', function(board) {
     socket.game.started = true;

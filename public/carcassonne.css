@@ -88,14 +88,26 @@ body {
   left: -100%
 }
 
-.stats:hover > div {
+#scores:hover > div {
   visibility: visible;
   left: 5px;
 }
 
-#test:hover > div {
+.stats {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.stats .tooltips {
+  font-size: 20px;
+  font-weight: normal;
+}
+
+.stats:hover > span {
   visibility: visible;
-  left: 45px;
+  top: 50px;
+  left: 5px;
 }
 
 #meeplesLeft, #tilesLeft, #score {
