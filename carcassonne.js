@@ -4,7 +4,7 @@ const http = require('http').Server(carcassonne);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
@@ -46,23 +46,27 @@ io.on('connection', function(socket) {
     socket.game = games.get(game);
     socket.game.players.push(socket);
     socket.color = socket.game.colors.shift();
+    socket.score = 0;
     socket.join(game);
     socket.emit('newPlayer', socket.color);
     io.emit('listGame', game);
-    io.in(socket.game.name).emit('createScoreTracker', socket.color);
+    io.in(socket.game.name).emit('createScoreTracker', {color: socket.color,
+                                                        score: socket.score});
   });
   socket.on('join', function(game) {
     socket.game = games.get(game);
     socket.game.players.push(socket);
     socket.color = socket.game.colors.shift();
+    socket.score = 0;
     socket.join(game);
     socket.emit('newPlayer', socket.color);
-    let colors = [];
+    let standings = [];
     for (let player of socket.game.players) {
-      colors.push(player.color);
+      standings.push({color: player.color, score: player.score});
     }
-    socket.to(socket.game.name).emit('createScoreTracker', socket.color);
-    socket.emit('fetchScoreTrackers', colors);
+    socket.to(socket.game.name).emit('createScoreTracker', {color: socket.color,
+                                                            score: socket.score});
+    socket.emit('fetchScoreTrackers', standings);
   });
   socket.on('leave', function(board) {
     socket.to(socket.game.name).emit('update', board);
@@ -73,6 +77,7 @@ io.on('connection', function(socket) {
       issueTile(socket.game.players[0]);
     }
     socket.color = '';
+    socket.score = 0;
     if (socket.game.players.length <= 0) {
       if (!socket.game.started) {
         io.emit('unlistGame', socket.game.name);
@@ -103,9 +108,14 @@ io.on('connection', function(socket) {
   });
   socket.on('done', function(board) {
     io.in(socket.game.name).emit('update', board);
-    issueTile(socket);
+    if (socket.game.bag.length > 0) {
+      issueTile(socket);
+    } else {
+      io.in(socket.game.name).emit('gameOver');
+    }
   });
   socket.on('scoreUpdate', function(score) {
+    socket.score = score;
     io.in(socket.game.name).emit('scoreUpdate', {color: socket.color,
                                                  score: score});
   });

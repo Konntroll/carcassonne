@@ -56,30 +56,34 @@ socket.on('gameStarted', function() {
 socket.on('scoreUpdate', function(data) {
   document.getElementById(data.color).innerHTML = data.score;
 });
-socket.on('createScoreTracker', function(color) {
-  createScoreTracker(color);
+socket.on('createScoreTracker', function(data) {
+  createScoreTracker(data);
 });
-socket.on('fetchScoreTrackers', function(colors) {
-  for (let color of colors) {
-    createScoreTracker(color);
+socket.on('fetchScoreTrackers', function(standings) {
+  for (let standing of standings) {
+    createScoreTracker(standing);
   }
 });
 socket.on('removeScoreTracker', function(color) {
   removeScoreTracker(color);
 });
-function createScoreTracker(color) {
+socket.on('gameOver', function() {
+  document.getElementById('restart').style.display = 'flex';
+  document.getElementById('done').style.display = 'none';
+});
+function createScoreTracker(data) {
   let entry = document.createElement('div');
   entry.className = 'scores';
-  entry.id = color + 'Player';
+  entry.id = data.color + 'Player';
   let token = document.createElement('img');
-  token.src = color + '.svg';
+  token.src = data.color + '.svg';
   token.className = "playerToken";
   let score = document.createElement('div');
-  score.id = color;
+  score.id = data.color;
   entry.appendChild(token);
   entry.appendChild(score);
   document.getElementById('scoreTrackers').appendChild(entry);
-  document.getElementById(color).innerHTML = 0;
+  document.getElementById(data.color).innerHTML = data.score;
 }
 function removeScoreTracker(color) {
   let scoreTracker = document.getElementById(color + 'Player');
@@ -168,7 +172,6 @@ function redraw() {
     }
     rotate();
   }
-  return;
   socket.emit('replace', hand.key);
   hand = null;
 }
