@@ -5,6 +5,8 @@ let color = '';
 let currentPlayer = '';
 let meeples = 7;
 let score = 0;
+let msga = false;
+let msgb = false;
 let seed = {sides: ["C", "R", "F", "R"],
             key: 'seed',
             rot: 0,
@@ -353,9 +355,32 @@ function start() {
   socket.emit('start', board);
   document.getElementById('start').style.display = 'none';
   document.getElementById('done').style.display = 'flex';
+  //message('Game started!');
 }
 function done() {
   if (!hand && currentPlayer == color) {
     socket.emit('done', board);
   }
+}
+function message(message) {
+  if (msga && msgb) {
+    dismiss('msga');
+    msga = false;
+  }
+  if (msga) {
+    let msg = document.getElementById('msgb');
+    msgb = true;
+  } else {
+    let msg = document.getElementById('msga');
+    msga = true;
+  }
+  msg.innerHTML = message;
+  msg.style.right = "200px";
+}
+function dissmiss(ID) {
+  let msg = document.getElementById(ID);
+  msg.style.right = "-500px";
+  setTimeout(function() {
+    msg.innerHTML = '';
+  }, 2000);
 }
