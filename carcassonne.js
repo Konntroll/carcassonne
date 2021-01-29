@@ -4,7 +4,7 @@ const http = require('http').Server(carcassonne);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs')
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
 
 let tiles = new Map();
 const data = fs.readFileSync('tiles.json', 'utf8');
@@ -109,6 +109,7 @@ io.on('connection', function(socket) {
   socket.on('done', function(board) {
     io.in(socket.game.name).emit('update', board);
     if (socket.game.bag.length > 0) {
+      io.in(socket.game.name).emit('message', 'It\'s ' + socket.game.players[0].color + ' player\'s turn.');
       issueTile(socket);
     } else {
       io.in(socket.game.name).emit('gameOver');

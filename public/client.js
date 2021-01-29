@@ -54,6 +54,7 @@ socket.on('welcome', function(games) {
 socket.on('gameStarted', function() {
   document.getElementById('start').style.display = 'none';
   document.getElementById('done').style.display = 'flex';
+  message('Game started!');
 })
 socket.on('scoreUpdate', function(data) {
   document.getElementById(data.color).innerHTML = data.score;
@@ -72,6 +73,10 @@ socket.on('removeScoreTracker', function(color) {
 socket.on('gameOver', function() {
   document.getElementById('restart').style.display = 'flex';
   document.getElementById('done').style.display = 'none';
+  message('Game over. Click restart to play another.');
+});
+socket.on('message', function(msg) {
+  window.onload = message(msg);
 });
 function createScoreTracker(data) {
   let entry = document.createElement('div');
@@ -189,7 +194,11 @@ function set() {
       tile.id = y + '.' + x;
       if (column == 0) {
         tile.addEventListener('click', function() {
-            if(validate(y, x)) place(y, x);
+            if (validate(y, x)) {
+              place(y, x);
+            } else {
+              message('This tile doesn\'t fit here.')
+            }
         });
       } else {
         pic = document.createElement('img');
@@ -355,7 +364,6 @@ function start() {
   socket.emit('start', board);
   document.getElementById('start').style.display = 'none';
   document.getElementById('done').style.display = 'flex';
-  //message('Game started!');
 }
 function done() {
   if (!hand && currentPlayer == color) {
@@ -367,20 +375,24 @@ function message(message) {
     dismiss('msga');
     msga = false;
   }
+  let msg;
   if (msga) {
-    let msg = document.getElementById('msgb');
+    msg = document.getElementById('msgb');
     msgb = true;
   } else {
-    let msg = document.getElementById('msga');
+    msg = document.getElementById('msga');
     msga = true;
   }
   msg.innerHTML = message;
-  msg.style.right = "200px";
+  msg.style.right = "0px";
+  //setTimeout(console.log(msg.id), 2000);
 }
-function dissmiss(ID) {
+function dismiss(ID) {
   let msg = document.getElementById(ID);
   msg.style.right = "-500px";
-  setTimeout(function() {
-    msg.innerHTML = '';
-  }, 2000);
+  if (ID == 'msga') {
+    msga = false;
+  } else {
+    msgb == false;
+  }
 }
