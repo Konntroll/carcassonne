@@ -5,8 +5,8 @@ let color = '';
 let currentPlayer = '';
 let meeples = 7;
 let score = 0;
-let msga = false;
-let msgb = false;
+let msga;
+let msgb;
 let seed = {sides: ["C", "R", "F", "R"],
             key: 'seed',
             rot: 0,
@@ -54,6 +54,7 @@ socket.on('welcome', function(games) {
 socket.on('gameStarted', function() {
   document.getElementById('start').style.display = 'none';
   document.getElementById('done').style.display = 'flex';
+  document.getElementById('redraw').style.display = 'flex';
   message('Game started!');
 })
 socket.on('scoreUpdate', function(data) {
@@ -72,12 +73,34 @@ socket.on('removeScoreTracker', function(color) {
 });
 socket.on('gameOver', function() {
   document.getElementById('restart').style.display = 'flex';
+  document.getElementById('redraw').style.display = 'none';
   document.getElementById('done').style.display = 'none';
   message('Game over. Click restart to play another.');
 });
 socket.on('message', function(msg) {
   window.onload = message(msg);
 });
+socket.on('restart', function() {
+  document.getElementById('restart').style.display = 'none';
+  document.getElementById('done').style.display = 'flex';
+  document.getElementById('redraw').style.display = 'flex';
+  meeples = 7;
+  document.getElementById('meeplesLeft').innerHTML = 7;
+  score = 0;
+  socket.emit('scoreUpdate', score);
+  document.getElementById('score').innerHTML = 0;
+});
+socket.on('exists', function(status) {
+  if (status) {
+    let note = document.getElementById('exists');
+    note.style.left = '-5px';
+    setTimeout(() => {note.style.left = '-255px'}, 3000);
+  } else {
+    document.getElementById('create').style.display = "none";
+    document.getElementById('display').style.display = 'block';
+    document.getElementById('infoAndControls').style.display = 'flex';
+  }
+})
 function createScoreTracker(data) {
   let entry = document.createElement('div');
   entry.className = 'scores';
@@ -129,9 +152,6 @@ function createGame() {
   if (event.keyCode === 13 || event.button === 0) {
     socket.emit('create', document.getElementById('startGame').value);
     document.getElementById('startGame').value = '';
-    document.getElementById('create').style.display = "none";
-    document.getElementById('display').style.display = 'block';
-    document.getElementById('infoAndControls').style.display = 'flex';
   }
 }
 function leave() {
@@ -159,6 +179,8 @@ function leave() {
   document.getElementById('infoAndControls').style.display = 'none';
   document.getElementById('start').style.display = 'flex';
   document.getElementById('done').style.display = 'none';
+  document.getElementById('redraw').style.display = 'none';
+  document.getElementById('restart').style.display = 'none';
 }
 function rotate() {
   let tile = document.getElementById('hand');
@@ -168,12 +190,21 @@ function rotate() {
   tile.style.transform = 'rotate(' + 90 * hand.rot + 'deg)';
 }
 function redraw() {
-  if (!hand) return;
+  if (!hand) {
+    message('You don\'t have a tile.');
+    return;
+  }
   for (const side of hand.sides) {
     for (const [y, row] of board.entries()) {
       for (const [x, column] of row.entries()) {
         if (column == 0) {
-          if (validate(y, x)) return;
+          if (validate(y, x)) {
+            let valid = document.getElementById(y + '.' + x);
+            valid.style.backgroundColor = 'rgb(86,243,141)';
+            setTimeout(() => {revert(y, x)}, 2000);
+            message('The tile is playable.');
+            return;
+          }
         }
       }
     }
@@ -197,6 +228,9 @@ function set() {
             if (validate(y, x)) {
               place(y, x);
             } else {
+              let invalid = document.getElementById(y + '.' + x);
+              invalid.style.backgroundColor = 'rgb(248,90,82)';
+              setTimeout(() => {revert(y, x)}, 1500);
               message('This tile doesn\'t fit here.')
             }
         });
@@ -364,35 +398,55 @@ function start() {
   socket.emit('start', board);
   document.getElementById('start').style.display = 'none';
   document.getElementById('done').style.display = 'flex';
+  document.getElementById('redraw').style.display = 'flex';
+}
+function restart() {
+  board = [
+    [0, 0 ,0],
+    [0, seed, 0],
+    [0, 0 ,0]
+  ];
+  socket.emit('restart', board);
 }
 function done() {
   if (!hand && currentPlayer == color) {
     socket.emit('done', board);
+    return;
+  }
+  if (hand) {
+    message('Play your tile first.');
+    return;
+  }
+  if (currentPlayer != color) {
+    message('It\'s not your turn.');
   }
 }
 function message(message) {
   if (msga && msgb) {
     dismiss('msga');
-    msga = false;
+    msga = undefined;
   }
   let msg;
   if (msga) {
     msg = document.getElementById('msgb');
-    msgb = true;
+    msgb = setTimeout(() => {dismiss(msg.id)}, 3000);
   } else {
     msg = document.getElementById('msga');
-    msga = true;
+    msga = setTimeout(() => {dismiss(msg.id)}, 3000);
   }
-  msg.innerHTML = message;
+  msg.firstChild.innerHTML = message
   msg.style.right = "0px";
-  //setTimeout(console.log(msg.id), 2000);
 }
 function dismiss(ID) {
+  if (ID == 'msga') {
+    msga = clearTimeout(msga);
+  } else {
+    msgb = clearTimeout(msgb);
+  }
   let msg = document.getElementById(ID);
   msg.style.right = "-500px";
-  if (ID == 'msga') {
-    msga = false;
-  } else {
-    msgb == false;
-  }
+}
+function revert(y, x) {
+  let trg = document.getElementById(y + '.' + x);
+  trg.style.backgroundColor = 'rgb(213,213,213)';
 }

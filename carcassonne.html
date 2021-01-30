@@ -13,6 +13,9 @@
           <h1>Start a game.</h1>
           <input id="startGame" type="text" placeholder="Choose a name." onkeyup="createGame()">
           <button id="gamebtn" type="button" onclick="createGame()">Create!</button>
+          <div id="exists">
+            <span>Name taken, try another.</span>
+          </div>
           <div id="games">
             <h1>Or join one of these:</h1>
           </div>
@@ -62,7 +65,7 @@
             <div class="btn" id="restart" onclick="restart()">New game
               <span class="tooltips">Start a new game.</span>
             </div>
-            <div class="btn" id="discard" onclick="redraw()">Redraw
+            <div class="btn" id="redraw" onclick="redraw()">Redraw
               <span class="tooltips">Replace an unplayable tile.</span>
             </div>
             <div class="btn" id="leave" onclick="leave()">Leave
@@ -74,8 +77,8 @@
         <div id="display">
           <img src="tiles/back.jpg" id="hand" onclick="rotate()">
         </div>
-        <div id="msga" onclick="dismiss('msga')"></div>
-        <div id="msgb" onclick="dismiss('msgb')"></div>
+        <div id="msga" onclick="dismiss('msga')"><div class="cont"></div></div>
+        <div id="msgb" onclick="dismiss('msgb')"><div class="cont"></div></div>
         <div id="board"></div>
     </body>
 </html>

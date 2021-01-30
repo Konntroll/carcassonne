@@ -36,6 +36,11 @@ let games = new Map();
 io.on('connection', function(socket) {
   socket.emit('welcome', listGames());
   socket.on('create', function(game) {
+    if (games.get(game)) {
+      socket.emit('exists', true);
+      return;
+    }
+    socket.emit('exists', false);
     games.set(game, {
       name: game,
       colors: mix(['white', 'green', 'blue', 'red', 'yellow', 'orange']),
@@ -106,6 +111,12 @@ io.on('connection', function(socket) {
     io.in(socket.game.name).emit('update', board);
     issueTile(socket);
   });
+  socket.on('restart', function(board) {
+    io.in(socket.game.name).emit('restart');
+    io.in(socket.game.name).emit('update', board);
+    socket.game.bag = mix(fill());
+    issueTile(socket);
+  });
   socket.on('done', function(board) {
     io.in(socket.game.name).emit('update', board);
     if (socket.game.bag.length > 0) {
@@ -122,6 +133,26 @@ io.on('connection', function(socket) {
   });
   socket.on('removeScoreTracker', function(color) {
     io.in(socket.game.name).emit('removeScoreTracker', color);
+  });
+  socket.on('disconnecting', function() {
+    if (socket.game) {
+      if (socket.game.players.length == 1) {
+        games.delete(socket.game.name);
+        if (!socket.game.started) {
+          socket.emit('unlistGame', socket.game.name);
+        }
+      }
+    }
+  });
+  socket.on('disconnected', function() {
+    if (socket.game) {
+      if (socket.game.players.length == 0) {
+        games.delete(socket.game.name);
+        if (!socket.game.started) {
+          socket.emit('unlistGame', socket.game.name);
+        }
+      }
+    }
   });
 });
 
