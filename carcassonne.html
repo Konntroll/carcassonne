@@ -22,12 +22,14 @@
         </div>
         <div id="infoAndControls">
           <div id="info">
+            <div id="decrement" onclick="changeScore(-1)">–</div>
             <div id="scores">
               <div id="score" onwheel="changeScore()">0</div>
               <div class="tooltips" id="scoreTrackers">Scroll up or down to adjust your score.
                 <div><hr>Player scores:</div>
               </div>
             </div>
+            <div id="increment" onclick="changeScore(1)">+</div>
             <svg id="token" version="1.0" xmlns="http://www.w3.org/2000/svg"
              viewBox="0 0 512.000000 512.000000">
               <g id="tokenColor" transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"

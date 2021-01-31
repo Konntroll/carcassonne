@@ -204,8 +204,8 @@ h1 {
 }
 
 #score {
-  padding-right: 0px;
-  padding-left: 10px;
+  padding-right: 3px;
+  padding-left: 3px;
   font-family: Lindsey;
 }
 
@@ -217,6 +217,34 @@ h1 {
   font-weight: bold;
   font-family: Lindsey;
   justify-content: center;
+}
+
+#decrement, #increment {
+  background-color: white;
+  width: 1em;
+  height: 1em;
+  border-radius: 1em;
+  border: solid 2px;
+  text-align: center;
+  font-size: 44px;
+  font-weight: bold;
+  font-family: Lindsey;
+  justify-content: center;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 10px;
+  line-height: 48px;
+  cursor: pointer;
+  user-select: none;
+}
+
+#decrement {
+  line-height: 37px;
+}
+
+#increment {
+  margin-left: 0px;
+  margin-right: 10px;
 }
 
 #infoAndControls {

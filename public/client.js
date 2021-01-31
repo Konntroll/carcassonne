@@ -123,9 +123,13 @@ function removeScoreTracker(color) {
   let scoreTracker = document.getElementById(color + 'Player');
   scoreTracker.parentNode.removeChild(scoreTracker);
 }
-function changeScore() {
-  event.preventDefault();
-  score += event.deltaY * -0.01;
+function changeScore(val = 0) {
+  //val ? score += val : score += event.deltaY * -0.01;
+  if (val) {
+    score += val;
+  } else {
+    event.deltaY < 0 ? score++ : score--;
+  }
   if (score < 0) score = 0;
   document.getElementById('score').innerHTML = score;
   socket.emit('scoreUpdate', score);
