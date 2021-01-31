@@ -9,15 +9,15 @@
         <script src="client.js"></script>
     </head>
     <body>
+        <h1 id="title">Carcassonne</h1>
+        <img id="splash" src="orange.svg"></img>
         <div id="create">
           <h1>Start a game.</h1>
           <input id="startGame" type="text" placeholder="Choose a name." onkeyup="createGame()">
           <button id="gamebtn" type="button" onclick="createGame()">Create!</button>
-          <div id="exists">
-            <span>Name taken, try another.</span>
-          </div>
+          <div id="exists">Name taken, try another.</div>
           <div id="games">
-            <h1>Or join one of these:</h1>
+            <h1>Or join one:</h1>
           </div>
         </div>
         <div id="infoAndControls">

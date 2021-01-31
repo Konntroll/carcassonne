@@ -5,8 +5,7 @@ let color = '';
 let currentPlayer = '';
 let meeples = 7;
 let score = 0;
-let msga;
-let msgb;
+let msga, msgb;
 let seed = {sides: ["C", "R", "F", "R"],
             key: 'seed',
             rot: 0,
@@ -20,10 +19,14 @@ let board = [
 socket.on('newPlayer', function(newColor) {
   color = newColor;
   document.getElementById('tokenColor').style.fill = color;
+  document.getElementById('splash').src = color + '.svg';
 });
 socket.on('stateUpdate', function(state) {
   currentPlayer = state.color;
   document.getElementById('tilesLeft').innerHTML = state.tiles;
+  for (let tile of state.highlights) {
+     document.getElementById(tile[1]).parentElement.style.borderColor = tile[0];
+  }
 });
 socket.on('tile', function(data) {
   hand = data;
@@ -93,10 +96,11 @@ socket.on('restart', function() {
 socket.on('exists', function(status) {
   if (status) {
     let note = document.getElementById('exists');
-    note.style.left = '-5px';
-    setTimeout(() => {note.style.left = '-255px'}, 3000);
+    note.style.visibility = 'visible';
+    setTimeout(() => {note.style.visibility = 'hidden'}, 4000);
   } else {
     document.getElementById('create').style.display = "none";
+    document.getElementById('title').style.display = "none";
     document.getElementById('display').style.display = 'block';
     document.getElementById('infoAndControls').style.display = 'flex';
   }
@@ -142,6 +146,7 @@ function makeGameEntry(name) {
   entry.onclick = function() {
     socket.emit('join', name);
     document.getElementById('create').style.display = "none";
+    document.getElementById('title').style.display = "none";
     document.getElementById('display').style.display = 'block';
     document.getElementById('infoAndControls').style.display = 'flex';
   }
@@ -175,6 +180,7 @@ function leave() {
     [0, 0 ,0]
   ];
   document.getElementById('create').style.display = "block";
+  document.getElementById('title').style.display = "block";
   document.getElementById('display').style.display = 'none';
   document.getElementById('infoAndControls').style.display = 'none';
   document.getElementById('start').style.display = 'flex';
@@ -356,6 +362,7 @@ function place(y, x) {
   let tile = document.createElement('img');
   tile.src = 'tiles/' + board[y][x].key + '.jpg';
   tile.id = board[y][x].key;
+  socket.emit('highlight', board[y][x].key);
   document.getElementById(y + '.' + x).appendChild(tile);
   expand(y, x);
   hand = null;
@@ -444,7 +451,7 @@ function dismiss(ID) {
     msgb = clearTimeout(msgb);
   }
   let msg = document.getElementById(ID);
-  msg.style.right = "-500px";
+  msg.style.right = "-505px";
 }
 function revert(y, x) {
   let trg = document.getElementById(y + '.' + x);

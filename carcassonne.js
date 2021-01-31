@@ -46,11 +46,13 @@ io.on('connection', function(socket) {
       colors: mix(['white', 'green', 'blue', 'red', 'yellow', 'orange']),
       bag: mix(fill()),
       players: [],
-      started: false
+      started: false,
+      highlights: new Map()
     });
     socket.game = games.get(game);
     socket.game.players.push(socket);
     socket.color = socket.game.colors.shift();
+    socket.game.highlights.set(socket.color, -1);
     socket.score = 0;
     socket.join(game);
     socket.emit('newPlayer', socket.color);
@@ -62,6 +64,7 @@ io.on('connection', function(socket) {
     socket.game = games.get(game);
     socket.game.players.push(socket);
     socket.color = socket.game.colors.shift();
+    socket.game.highlights.set(socket.color, -1);
     socket.score = 0;
     socket.join(game);
     socket.emit('newPlayer', socket.color);
@@ -126,6 +129,9 @@ io.on('connection', function(socket) {
       io.in(socket.game.name).emit('gameOver');
     }
   });
+  socket.on('highlight', function(key) {
+    socket.game.highlights.set(socket.color, key);
+  })
   socket.on('scoreUpdate', function(score) {
     socket.score = score;
     io.in(socket.game.name).emit('scoreUpdate', {color: socket.color,
@@ -177,7 +183,8 @@ function issueTile(player) {
   );
   io.in(player.game.name).emit('stateUpdate',
                                {color: player.game.players[0].color,
-                                tiles: player.game.bag.length});
+                                tiles: player.game.bag.length,
+                                highlights: [...player.game.highlights.entries()]});
   player.game.players.push(player.game.players.shift());
 }
 
